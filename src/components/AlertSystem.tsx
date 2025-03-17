@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import { BellIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { CandleData } from '@/types/crypto';
@@ -27,7 +27,7 @@ export const AlertSystem: React.FC<AlertSystemProps> = ({ chartData, symbol }) =
   });
   const lastUpdateTimeRef = useRef<number>(0);
 
-  const notifyAlert = (alert: Alert, currentValue: number) => {
+  const notifyAlert = useCallback((alert: Alert, currentValue: number) => {
     const message = `${symbol} ${alert.type} ${alert.condition} ${alert.value}
     Current value: ${currentValue.toFixed(2)}`;
     
@@ -44,7 +44,7 @@ export const AlertSystem: React.FC<AlertSystemProps> = ({ chartData, symbol }) =
         a.id === alert.id ? { ...a, active: false } : a
       ));
     }
-  };
+  }, [symbol, setAlerts]);
 
   useEffect(() => {
     if (!chartData.length) return;
@@ -84,7 +84,7 @@ export const AlertSystem: React.FC<AlertSystemProps> = ({ chartData, symbol }) =
           break;
       }
     });
-  }, [chartData, alerts, symbol]);
+  }, [chartData, alerts, symbol, notifyAlert]);
 
   const handleAddAlert = () => {
     const alert: Alert = {

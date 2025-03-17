@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Legend } from 'recharts';
 import { CandleData } from '@/types/crypto';
 import { Time } from 'lightweight-charts';
@@ -35,81 +35,8 @@ export const PredictionView: React.FC<PredictionViewProps> = ({ chartData }) => 
   const lastUpdateTimeRef = useRef<number>(0);
   const chartContainerRef = useRef<HTMLDivElement>(null);
 
-  // Initialize analysis
-  useEffect(() => {
-    const initializeAnalysis = async () => {
-      setIsLoading(true);
-      
-      // Simulate loading advanced analysis
-      setTimeout(() => {
-        if (chartData && chartData.length > 0) {
-          setAnalysis({
-            supportLevels: [chartData[chartData.length - 1].close * 0.95, chartData[chartData.length - 1].close * 0.9],
-            resistanceLevels: [chartData[chartData.length - 1].close * 1.05, chartData[chartData.length - 1].close * 1.1],
-            trendStrength: 0.75,
-            volatilityIndex: 0.45,
-            marketSentiment: 'Bullish',
-            keyFactors: [
-              'Increased trading volume',
-              'Positive market news',
-              'Strong technical indicators'
-            ]
-          });
-        }
-        setIsLoading(false);
-      }, 1000);
-    };
-
-    if (chartData && chartData.length > 0) {
-      initializeAnalysis();
-      dataRef.current = [...chartData];
-      updatePredictions(chartData);
-    }
-  }, [chartData]);
-
-  // Update predictions when chart data changes
-  useEffect(() => {
-    if (!chartData || chartData.length === 0 || !dataRef.current.length) return;
-    
-    // Don't update too frequently (minimum 10 seconds between updates)
-    const now = Date.now();
-    if (now - lastUpdateTimeRef.current < 10000) return;
-    lastUpdateTimeRef.current = now;
-    
-    // Check if we have new data
-    const lastExistingTime = dataRef.current[dataRef.current.length - 1]?.time;
-    const newData = chartData.filter(candle => {
-      // Handle different time types
-      if (typeof candle.time === 'number' && typeof lastExistingTime === 'number') {
-        return candle.time > lastExistingTime;
-      }
-      // For other time types, we'll just use the new data
-      return true;
-    });
-    
-    // Only update predictions if there's enough new data
-    if (newData.length < 3) return;
-    
-    // Save current view state before updating
-    if (chartContainerRef.current) {
-      const container = chartContainerRef.current;
-      const scrollLeft = container.scrollLeft;
-      const scrollWidth = container.scrollWidth;
-      const clientWidth = container.clientWidth;
-      
-      // Calculate if user is viewing the latest data
-      viewStateRef.current.isAtLatest = (scrollLeft + clientWidth >= scrollWidth - 20);
-    }
-    
-    // Update data reference with new data
-    dataRef.current = [...chartData];
-    
-    // Update predictions with the new data
-    updatePredictions(dataRef.current);
-  }, [chartData]);
-
-  // Function to update predictions
-  const updatePredictions = async (data: CandleData[]) => {
+  // Function to update predictions (moved before useEffect and wrapped with useCallback)
+  const updatePredictions = useCallback(async (data: CandleData[]) => {
     if (!data || data.length < 30) return;
     
     // Use the last 30 candles for prediction
@@ -193,7 +120,80 @@ export const PredictionView: React.FC<PredictionViewProps> = ({ chartData }) => 
     } else {
       setSentiment('Neutral');
     }
-  };
+  }, []);
+
+  // Initialize analysis
+  useEffect(() => {
+    const initializeAnalysis = async () => {
+      setIsLoading(true);
+      
+      // Simulate loading advanced analysis
+      setTimeout(() => {
+        if (chartData && chartData.length > 0) {
+          setAnalysis({
+            supportLevels: [chartData[chartData.length - 1].close * 0.95, chartData[chartData.length - 1].close * 0.9],
+            resistanceLevels: [chartData[chartData.length - 1].close * 1.05, chartData[chartData.length - 1].close * 1.1],
+            trendStrength: 0.75,
+            volatilityIndex: 0.45,
+            marketSentiment: 'Bullish',
+            keyFactors: [
+              'Increased trading volume',
+              'Positive market news',
+              'Strong technical indicators'
+            ]
+          });
+        }
+        setIsLoading(false);
+      }, 1000);
+    };
+
+    if (chartData && chartData.length > 0) {
+      initializeAnalysis();
+      dataRef.current = [...chartData];
+      updatePredictions(chartData);
+    }
+  }, [chartData, updatePredictions]);
+
+  // Update predictions when chart data changes
+  useEffect(() => {
+    if (!chartData || chartData.length === 0 || !dataRef.current.length) return;
+    
+    // Don't update too frequently (minimum 10 seconds between updates)
+    const now = Date.now();
+    if (now - lastUpdateTimeRef.current < 10000) return;
+    lastUpdateTimeRef.current = now;
+    
+    // Check if we have new data
+    const lastExistingTime = dataRef.current[dataRef.current.length - 1]?.time;
+    const newData = chartData.filter(candle => {
+      // Handle different time types
+      if (typeof candle.time === 'number' && typeof lastExistingTime === 'number') {
+        return candle.time > lastExistingTime;
+      }
+      // For other time types, we'll just use the new data
+      return true;
+    });
+    
+    // Only update predictions if there's enough new data
+    if (newData.length < 3) return;
+    
+    // Save current view state before updating
+    if (chartContainerRef.current) {
+      const container = chartContainerRef.current;
+      const scrollLeft = container.scrollLeft;
+      const scrollWidth = container.scrollWidth;
+      const clientWidth = container.clientWidth;
+      
+      // Calculate if user is viewing the latest data
+      viewStateRef.current.isAtLatest = (scrollLeft + clientWidth >= scrollWidth - 20);
+    }
+    
+    // Update data reference with new data
+    dataRef.current = [...chartData];
+    
+    // Update predictions with the new data
+    updatePredictions(dataRef.current);
+  }, [chartData, updatePredictions]);
 
   // Function to format time for display
   const formatTime = (timestamp: any) => {
