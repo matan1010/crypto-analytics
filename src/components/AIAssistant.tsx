@@ -389,34 +389,41 @@ Volatility: ${volatility.toFixed(2)}%`;
         throw new Error('OpenAI API key is not configured');
       }
       
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      // Switch to using our local API endpoint instead of OpenAI directly
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${OPENAI_API_KEY}`
         },
         body: JSON.stringify({
-          model: 'gpt-4o',  // החלפה למודל המתקדם ביום
           messages: messages,
-          temperature: 0.9, // הגדלת היצירתיות עוד יותר
-          max_tokens: 1500, // הגדלת אורך התשובה המקסימלי
-          presence_penalty: 0.4, // הגדלת העונש על חזרה על תוכן
-          frequency_penalty: 0.5, // הגדלת העונש על שימוש חוזר באותן מילים
-          response_format: { type: "text" }, // פורמט טקסט רגיל
-          top_p: 0.95, // שימור מגוון תוך הסרת אפשרויות נדירות מדי
-          seed: Math.floor(Math.random() * 1000000) // סיד אקראי לגיוון התשובות
+          marketData: {
+            symbol: "BTC/USDT",
+            price: 60000 + Math.random() * 2000,
+            priceChange24h: (Math.random() * 10 - 5).toFixed(2),
+            volume24h: (Math.random() * 50000000 + 100000000).toFixed(0)
+          }
         })
       });
       
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`API Error: ${errorData.error?.message || 'Unknown error'}`);
+        try {
+          const errorData = await response.json();
+          console.error("Server API error details:", errorData);
+          throw new Error(`API Error: ${errorData.error || errorData.details || response.statusText}`);
+        } catch (jsonError) {
+          throw new Error(`API Error (${response.status}): ${response.statusText}`);
+        }
       }
       
       const data = await response.json();
-      return data.choices[0].message.content;
+      if (data.error) {
+        throw new Error(`API Response Error: ${data.error}`);
+      }
+      
+      return data.message;
     } catch (error) {
-      console.error('Error calling OpenAI API:', error);
+      console.error('Error calling Chat API:', error);
       throw error;
     }
   };
