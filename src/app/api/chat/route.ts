@@ -1,12 +1,28 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
+// Use NEXT_PUBLIC_OPENAI_API_KEY instead of OPENAI_API_KEY
+const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY || '';
+
+// Check if API key exists
+if (!apiKey) {
+  console.warn("WARNING: Missing OpenAI API key. Chat functionality will not work.");
+}
+
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: apiKey,
 });
 
 export async function POST(request: Request) {
   try {
+    // Check for API key again to provide a better error message
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: 'OpenAI API key is not configured' },
+        { status: 500 }
+      );
+    }
+
     const { messages, marketData } = await request.json();
 
     const systemMessage = {

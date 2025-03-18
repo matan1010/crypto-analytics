@@ -5,6 +5,7 @@
 [build.environment]
   NODE_VERSION = "18"
   NPM_VERSION = "9"
+  OPENAI_API_KEY = "NEXT_PUBLIC_OPENAI_API_KEY"
 
 # Force a specific path to the Netlify CLI's Node binary
 [functions]
