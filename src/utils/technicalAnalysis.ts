@@ -234,7 +234,7 @@ export const analyzeVolumeProfile = (data: CandleData[]) => {
  * @returns Array of order blocks with type, price levels, and time
  */
 export const findOrderBlocks = (data: CandleData[]) => {
-  const blocks = [];
+  const blocks: any[] = [];
   
   for (let i = 1; i < data.length - 1; i++) {
     const current = data[i];
@@ -317,7 +317,7 @@ export const detectDivergence = (data: CandleData[], type: 'rsi' | 'macd') => {
     });
   };
   
-  const divergences = [];
+  const divergences: any[] = [];
   
   // Regular Bullish Divergence
   if (prices[prices.length - 1] < prices[prices.length - 2] &&
@@ -479,7 +479,7 @@ export const getTechnicalAnalysisSummary = (data: CandleData[]) => {
   const riskLevel = calculateRiskLevel(rsi, volatility, momentum, atr);
   
   // Potential signals
-  const signals = [];
+  const signals: any[] = [];
   
   if (rsi < 30 && trend !== "Strong Bearish") {
     signals.push("RSI Oversold - Potential Buy");

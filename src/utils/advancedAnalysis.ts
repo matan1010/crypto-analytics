@@ -71,7 +71,7 @@ export class AdvancedAnalysis {
       
       // Calculate price momentum
       const prices = recentCandles.map(c => c.close);
-      const priceChanges = [];
+      const priceChanges: number[] = [];
       
       for (let i = 1; i < prices.length; i++) {
         priceChanges.push((prices[i] - prices[i-1]) / prices[i-1]);
